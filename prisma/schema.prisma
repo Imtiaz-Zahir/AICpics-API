@@ -1,0 +1,44 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model photos {
+  id           String      @id @default(uuid())
+  imageID      String      @unique
+  channelID    String
+  prompt       String
+  download     Int         @default(0)
+  height       Int
+  width        Int
+  size         Int
+  createdAt    DateTime    @db.Date
+  storedAt     DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  attachmentID String      @unique
+  attachments  attachments @relation(fields: [attachmentID], references: [id])
+
+  @@index([prompt], type: SpGist)
+}
+
+model attachments {
+  id        String   @id @unique
+  name      String   @unique
+  expires   String
+  issued    String
+  signature String
+  updatedAt DateTime @updatedAt
+  photos    photos?
+}
+
+model users {
+  email     String   @id @unique
+  name      String
+  image     String
+  lastVisit DateTime @default(now())
+  joinAt    DateTime @default(now())
+}

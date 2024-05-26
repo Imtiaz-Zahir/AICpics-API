@@ -9,9 +9,9 @@ export function setFavorite(email: string, imageID: string) {
       photos: {
         select: {
           prompt: true,
-          displayImage: true,
+          // displayImage: true,
           id: true,
-          thumbnailImage: true,
+          // thumbnailImage: true,
           height: true,
           width: true,
           size: true,
@@ -33,9 +33,9 @@ export function getFavorites(email: string) {
       photos: {
         select: {
           prompt: true,
-          displayImage: true,
+          // displayImage: true,
           id: true,
-          thumbnailImage: true,
+          // thumbnailImage: true,
           height: true,
           width: true,
           size: true,

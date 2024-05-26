@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { getImages, getImageByID, countImages } from "../services/imageService";
+import { getImages, getImageByID, countImages,updateImageForDownload } from "../services/imageService";
 import { error } from "../utils/error";
 
 export async function imagesController(
@@ -23,7 +23,7 @@ export async function imagesController(
     const images = await getImages(skip, take, searchText);
     const total = await countImages(searchText);
 
-    response.json({ images, total });
+    response.json({ images,total });
   } catch (error) {
     next(error);
   }
@@ -38,6 +38,21 @@ export async function singleImageController(
     const imageId = request.params.id;
 
     const image = await getImageByID(imageId);
+    if (!image) throw error("Image not found", 404);
+
+    response.json(image);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function incrementDownloadController(
+  request: Request,
+  response: Response,
+  next: NextFunction){
+  try {
+    const image = await updateImageForDownload(request.params.id);
+
     if (!image) throw error("Image not found", 404);
 
     response.json(image);

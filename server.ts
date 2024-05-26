@@ -1,7 +1,7 @@
 import express, { Express, Request, Response, NextFunction } from "express";
 import dotenv from "dotenv";
-import routes from "../routes";
-import { CustomError } from "../utils/error";
+import routes from "./routes";
+import { CustomError } from "./utils/error";
 
 dotenv.config();
 

@@ -1,5 +1,3 @@
-
-
 export async function getMedia(imageUrl: string) {
     const imageResponse = await fetch(imageUrl);
 

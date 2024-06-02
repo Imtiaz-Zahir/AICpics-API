@@ -186,21 +186,21 @@ export async function getImageByID(id: string): Promise<ImageData | null> {
 
 export async function updateImageForDownload(
   id: string
-): Promise<ImageData | null> {
-  const image = await prisma.photos.update({
+) {
+  return await prisma.photos.update({
     where: { id },
     data: { download: { increment: 1 } },
   });
-  if (!image) return null;
+  // if (!image) return null;
 
-  return {
-    id: image.id,
-    prompt: image.prompt,
-    key: await keyGenerator(image),
-    height: image.height,
-    width: image.width,
-    size: image.size,
-  };
+  // return {
+  //   id: image.id,
+  //   prompt: image.prompt,
+  //   key: await keyGenerator(image),
+  //   height: image.height,
+  //   width: image.width,
+  //   size: image.size,
+  // };
 }
 
 export async function updateAttachmentByID(

@@ -1,11 +1,13 @@
 import express from "express";
-import { getImage } from "../controllers/mediaControllers";
+import { getImage, downloadImage } from "../controllers/mediaControllers";
 
 const router = express.Router();
 
 // router.get("/", imagesController);
 
 router.get("/:slug", getImage);
+
+router.get("/download/:id", downloadImage);
 
 // router.patch("/:id", incrementDownloadController)
 

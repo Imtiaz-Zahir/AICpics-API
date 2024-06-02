@@ -27,7 +27,7 @@ export default async function keyGenerator({
       fn: fileName,
       ex: expiresAt,
       is: issuedAt,
-      hm: signature,
+      sg: signature,
     })
   );
 

@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { error } from "../utils/error";
 import { decryptKey } from "../utils/hash";
 import validateAttachment from "../utils/validateAttachment";
-import { getMedia } from "../services/mediaService"
+import { getMedia } from "../services/mediaService";
 
 export async function getImage(
   request: Request,
@@ -11,8 +11,15 @@ export async function getImage(
 ) {
   try {
     const key = request.query.key as string | undefined;
-    let width = Number(request.query.width);
-    let height = Number(request.query.height);
+    let width = Number(request.query.width || 800);
+    let height = Number(request.query.height || 800);
+    let og = request.query.og as string | undefined;
+
+    if (width > 800) width = 800;
+    if (og) {
+      width = 1200;
+      height = 630;
+    }
 
     if (!key) {
       throw error("Key is required", 400);
@@ -35,9 +42,9 @@ export async function getImage(
     const imageUrl = `https://media.discordapp.net/attachments/${cid}/${aid}/${fn}?ex=${ex}&is=${is}&hm=${sg}&format=webp&quality=lossless&width=${width}&height=${height}`;
 
     const arrayBuffer = await getMedia(imageUrl);
-    if(!arrayBuffer) throw new Error("Failed to fetch image");
+    if (!arrayBuffer) throw new Error("Failed to fetch image");
     const buffer = Buffer.from(arrayBuffer);
-    
+
     response.contentType("image/webp");
     response.setHeader("Cache-Control", "public, max-age=31536000");
     response.send(buffer);

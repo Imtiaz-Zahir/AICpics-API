@@ -1,7 +1,5 @@
 import { PrismaClient } from "@prisma/client";
 import keyGenerator from "../utils/keyGenerator";
-// import type { ImageData } from "@/types/imageTypes";
-// import { cache } from "react";
 
 const prisma = new PrismaClient();
 
@@ -36,7 +34,7 @@ export async function getImages(
 ): Promise<ImageData[]> {
   const result: ImageData[] = [];
 
-  if (search) {
+  if (search && search.split(" ").length > 1){
     const images = (await prisma.photos.aggregateRaw({
       pipeline: [
         {
@@ -67,16 +65,10 @@ export async function getImages(
             width: 1,
             size: 1,
             download: 1,
-            score: { $meta: "searchScore" },
-          },
-        },
-        {
-          $match: {
-            score: { $gt: 5 },
           },
         },
         { $sort: { download: -1 } },
-        { $unset: ["download", "score"] },
+        { $unset: ["download"] },
       ],
     })) as unknown as Image[];
 
@@ -94,7 +86,7 @@ export async function getImages(
     const images = await prisma.photos.findMany({
       take,
       skip,
-      // where: search ? { prompt: { contains: search } } : undefined,
+      where: search ? { prompt: { contains: search } } : undefined,
       // orderBy: { download: "desc" },
       select: {
         id: true,
@@ -124,6 +116,33 @@ export async function getImages(
     );
   }
   return result;
+}
+
+export async function countImages(search?: string): Promise<number> {
+  if (search && search.split(" ").length > 1){
+    const result = (await prisma.photos.aggregateRaw({
+      pipeline: [
+        {
+          $search: {
+            text: {
+              query: search,
+              path: "prompt",
+            },
+          },
+        },
+        {
+          $count: "total",
+        },
+      ],
+    })) as unknown as { total: number }[];
+
+    if (result.length === 0) return 0;
+
+    return result[0].total;
+  }
+  return prisma.photos.count({
+    where: search ? { prompt: { contains: search } } : undefined,
+  });
 }
 
 export async function getALLImagesIDAndPrompt() {
@@ -163,57 +182,6 @@ export async function getImageByID(id: string): Promise<ImageData | null> {
     width: image.width,
     size: image.size,
   };
-}
-
-export async function countImages(search?: string): Promise<number> {
-  if (search) {
-    const result = (await prisma.photos.aggregateRaw({
-      pipeline: [
-        {
-          $search: {
-            text: {
-              query: search,
-              path: "prompt",
-            },
-          },
-        },
-        {
-          $set: {
-            score: { $meta: "searchScore" },
-          },
-        },
-        // {
-        //   $match: {
-        //     score: { $gt: 5 },
-        //   },
-        // },
-        {
-          $group: {
-            _id: null,
-            total: { $sum: 1 },
-            averageScore: { $avg: "$score" },
-          },
-        },
-        {
-          $project: {
-            _id: 0,
-            total: 1,
-            averageScore: 1,
-          },
-        },
-      ]      
-      
-    })) as unknown as { total: number }[];
-
-    console.log(result);
-
-    if (result.length === 0) return 0;
-
-    return result[0].total;
-  }
-  return prisma.photos.count({
-    // where: search ? { prompt: { contains: search } } : undefined,
-  });
 }
 
 export async function updateImageForDownload(

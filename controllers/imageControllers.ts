@@ -1,5 +1,10 @@
 import { Request, Response, NextFunction } from "express";
-import { getImages, getImageByID, countImages,updateImageForDownload } from "../services/imageService";
+import {
+  getImages,
+  getImageByID,
+  countImages,
+  updateImageForDownload,
+} from "../services/imageService";
 import { error } from "../utils/error";
 
 export async function imagesController(
@@ -12,18 +17,23 @@ export async function imagesController(
 
     const skip = Number(searchQuery.skip ?? 0);
     const take = Number(searchQuery.take ?? 30);
-
-    if (take < 0 || skip < 0) throw error("Bad request", 400);
-
-    if (take > 100) throw error("Max allowed 100 image", 400);
+    const count = searchQuery.count;
 
     const search = searchQuery.search as string | undefined;
     const searchText = search?.replace("+", " ");
 
-    const images = await getImages(skip, take, searchText);
-    const total = await countImages(searchText);
+    if (count === "true") {
+      const total = await countImages(searchText);
+      response.json(total);
+    } else {
+      if (take < 0 || skip < 0) throw error("Bad request", 400);
 
-    response.json({ images,total });
+      if (take > 100) throw error("Max allowed 100 image", 400);
+
+      const images = await getImages(skip, take, searchText);
+
+      response.json(images);
+    }
   } catch (error) {
     next(error);
   }
@@ -49,7 +59,8 @@ export async function singleImageController(
 export async function incrementDownloadController(
   request: Request,
   response: Response,
-  next: NextFunction){
+  next: NextFunction
+) {
   try {
     const image = await updateImageForDownload(request.params.id);
 

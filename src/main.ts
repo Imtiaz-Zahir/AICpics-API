@@ -8,14 +8,14 @@ import * as fs from 'fs';
 import * as morgan from 'morgan';
 
 async function bootstrap() {
-  const httpsOptions = {
-    http2: true,
-    https: {
-      allowHTTP1: true,
-      key: fs.readFileSync('./server.key'),
-      cert: fs.readFileSync('./server.crt'),
-    },
-  };
+  // const httpsOptions = {
+  //   http2: true,
+  //   https: {
+  //     allowHTTP1: true,
+  //     key: fs.readFileSync('./server.key'),
+  //     cert: fs.readFileSync('./server.crt'),
+  //   },
+  // };
 
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule

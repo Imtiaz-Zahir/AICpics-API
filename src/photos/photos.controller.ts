@@ -21,61 +21,61 @@ export class PhotosController {
     private ImagesService: ImagesService,
   ) {}
 
-  // @Get(':slug')
-  // async getPhoto(
-  //   @Res() response: Response,
-  //   @Param('slug') slug: string,
-  //   @Query('width', new DefaultValuePipe(800), ParseIntPipe) width: number,
-  // ) {
-  //   const slugSlices = slug.split('_');
-  //   const id = slugSlices[slugSlices.length - 1].slice(0, -5);
+  @Get(':slug')
+  async getPhoto(
+    @Res() response: Response,
+    @Param('slug') slug: string,
+    @Query('width', new DefaultValuePipe(800), ParseIntPipe) width: number,
+  ) {
+    const slugSlices = slug.split('_');
+    const id = slugSlices[slugSlices.length - 1].slice(0, -5);
 
-  //   const image = await this.ImagesService.getImage(id);
+    const image = await this.ImagesService.getImage(id);
 
-  //   if (!image) {
-  //     throw new HttpException('Image not found', HttpStatus.NOT_FOUND);
-  //   }
+    if (!image) {
+      throw new HttpException('Image not found', HttpStatus.NOT_FOUND);
+    }
 
-  //   const sanitizedPrompt = image.prompt
-  //     .replace(/[^\w\s]/g, '')
-  //     .split(/\s+/)
-  //     .slice(0, 7)
-  //     .join('-')
-  //     .toLowerCase();
+    const sanitizedPrompt = image.prompt
+      .replace(/[^\w\s]/g, '')
+      .split(/\s+/)
+      .slice(0, 7)
+      .join('-')
+      .toLowerCase();
 
-  //   if (sanitizedPrompt !== slugSlices.slice(0, -1).join('_')) {
-  //     throw new HttpException('Invalid Url', HttpStatus.NOT_FOUND);
-  //   }
+    if (sanitizedPrompt !== slugSlices.slice(0, -1).join('_')) {
+      throw new HttpException('Invalid Url', HttpStatus.NOT_FOUND);
+    }
 
-  //   if (width < 400) width = 400;
-  //   if (width > 800) width = 800;
+    if (width < 400) width = 400;
+    if (width > 800) width = 800;
 
-  //   const messageId = BigInt('0x' + id).toString();
-  //   const attachment = await this.DiscordService.getAttachment(messageId);
+    const messageId = BigInt('0x' + id).toString();
+    const attachment = await this.DiscordService.getAttachment(messageId);
 
-  //   if (!attachment) {
-  //     throw new HttpException('Image not found', HttpStatus.NOT_FOUND);
-  //   }
+    if (!attachment) {
+      throw new HttpException('Image not found', HttpStatus.NOT_FOUND);
+    }
 
-  //   const height = Math.round((attachment.height * width) / attachment.width);
+    const height = Math.round((attachment.height * width) / attachment.width);
 
-  //   const imageResponse = await fetch(
-  //     `${attachment.url}&format=webp&quality=lossless&width=${width}&height=${height}`,
-  //   );
+    const imageResponse = await fetch(
+      `${attachment.url}&format=webp&quality=lossless&width=${width}&height=${height}`,
+    );
 
-  //   if (!imageResponse.ok) {
-  //     throw new HttpException('Image not found', HttpStatus.NOT_FOUND);
-  //   }
+    if (!imageResponse.ok) {
+      throw new HttpException('Image not found', HttpStatus.NOT_FOUND);
+    }
 
-  //   const nodeStream = Readable.fromWeb(imageResponse.body);
+    const nodeStream = Readable.fromWeb(imageResponse.body);
 
-  //   response.setHeader('Content-Type', attachment.contentType);
-  //   response.setHeader(
-  //     'Content-Length',
-  //     imageResponse.headers.get('Content-Length'),
-  //   );
-  //   response.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    response.setHeader('Content-Type', attachment.contentType);
+    response.setHeader(
+      'Content-Length',
+      imageResponse.headers.get('Content-Length'),
+    );
+    response.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
 
-  //   nodeStream.pipe(response);
-  // }
+    nodeStream.pipe(response);
+  }
 }

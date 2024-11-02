@@ -18,13 +18,15 @@ async function bootstrap() {
   // };
 
   const app = await NestFactory.create<NestFastifyApplication>(
-    AppModule
+    AppModule,
     // new FastifyAdapter(httpsOptions),
   );
 
-  app.use(morgan('combined'));
+  app.use(
+    morgan(':method :url :status :res[content-length] - :response-time ms'),
+  );
 
-  app.listen(2000, ()=>{
+  app.listen(2000, () => {
     console.log('Server started on http://localhost:2000');
   });
 }

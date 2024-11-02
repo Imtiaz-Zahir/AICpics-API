@@ -75,6 +75,7 @@ export class PhotosController {
       imageResponse.headers.get('Content-Length'),
     );
     response.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    response.setHeader('Vary', 'Accept, Width');
 
     nodeStream.pipe(response);
   }

@@ -4,8 +4,10 @@ import {
 } from '@nestjs/platform-fastify';
 import { AppModule } from './app.module';
 import { NestFactory } from '@nestjs/core';
-import * as fs from 'fs';
 import * as morgan from 'morgan';
+import 'dotenv/config';
+
+const port = parseInt(process.env.PORT, 10) || 2000;
 
 async function bootstrap() {
   // const httpsOptions = {
@@ -26,8 +28,8 @@ async function bootstrap() {
     morgan(':method :url :status :res[content-length] - :response-time ms'),
   );
 
-  app.listen(2000, () => {
-    console.log('Server started on http://localhost:2000');
+  app.listen(port, () => {
+    console.log('Server started on http://localhost:' + port);
   });
 }
 

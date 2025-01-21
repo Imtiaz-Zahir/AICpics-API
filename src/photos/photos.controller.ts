@@ -27,56 +27,66 @@ export class PhotosController {
     @Param('slug') slug: string,
     @Query('width', new DefaultValuePipe(800), ParseIntPipe) width: number,
   ) {
-    const slugSlices = slug.split('_');
-    const id = slugSlices[slugSlices.length - 1].slice(0, -5);
+    try {
+      const slugSlices = slug.split('_');
+      const id = slugSlices[slugSlices.length - 1].slice(0, -5);
 
-    const image = await this.ImagesService.getImage(id);
+      const image = await this.ImagesService.getImage(id);
 
-    if (!image) {
-      throw new HttpException('Image not found', HttpStatus.NOT_FOUND);
+      if (!image) {
+        throw new HttpException('Image not found', HttpStatus.NOT_FOUND);
+      }
+
+      const sanitizedPrompt = image.prompt
+        .replace(/[^\w\s]/g, '')
+        .split(/\s+/)
+        .slice(0, 7)
+        .join('-')
+        .toLowerCase();
+
+      if (sanitizedPrompt !== slugSlices.slice(0, -1).join('_')) {
+        throw new HttpException('Invalid Url', HttpStatus.NOT_FOUND);
+      }
+
+      if (width < 400) width = 400;
+      if (width > 800) width = 800;
+
+      const messageId = BigInt('0x' + id).toString();
+      const attachment = await this.DiscordService.getAttachment({
+        messageId,
+        channelId: '1281679888826372149',
+      });
+
+      if (!attachment) {
+        throw new HttpException('Image not found', HttpStatus.NOT_FOUND);
+      }
+
+      const height = Math.round((attachment.height * width) / attachment.width);
+
+      const imageResponse = await fetch(
+        `${attachment.url}&format=webp&quality=lossless&width=${width}&height=${height}`,
+      );
+
+      if (!imageResponse.ok) {
+        throw new HttpException('Image not found', HttpStatus.NOT_FOUND);
+      }
+
+      const nodeStream = Readable.fromWeb(imageResponse.body);
+
+      response.setHeader('Content-Type', attachment.contentType);
+      response.setHeader(
+        'Content-Length',
+        imageResponse.headers.get('Content-Length'),
+      );
+      response.setHeader(
+        'Cache-Control',
+        'public, max-age=31536000, immutable',
+      );
+      response.setHeader('Vary', 'Accept, Width');
+
+      nodeStream.pipe(response);
+    } catch (error) {
+      console.error('Error fetching image:', error);
     }
-
-    const sanitizedPrompt = image.prompt
-      .replace(/[^\w\s]/g, '')
-      .split(/\s+/)
-      .slice(0, 7)
-      .join('-')
-      .toLowerCase();
-
-    if (sanitizedPrompt !== slugSlices.slice(0, -1).join('_')) {
-      throw new HttpException('Invalid Url', HttpStatus.NOT_FOUND);
-    }
-
-    if (width < 400) width = 400;
-    if (width > 800) width = 800;
-
-    const messageId = BigInt('0x' + id).toString();
-    const attachment = await this.DiscordService.getAttachment(messageId);
-
-    if (!attachment) {
-      throw new HttpException('Image not found', HttpStatus.NOT_FOUND);
-    }
-
-    const height = Math.round((attachment.height * width) / attachment.width);
-
-    const imageResponse = await fetch(
-      `${attachment.url}&format=webp&quality=lossless&width=${width}&height=${height}`,
-    );
-
-    if (!imageResponse.ok) {
-      throw new HttpException('Image not found', HttpStatus.NOT_FOUND);
-    }
-
-    const nodeStream = Readable.fromWeb(imageResponse.body);
-
-    response.setHeader('Content-Type', attachment.contentType);
-    response.setHeader(
-      'Content-Length',
-      imageResponse.headers.get('Content-Length'),
-    );
-    response.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    response.setHeader('Vary', 'Accept, Width');
-
-    nodeStream.pipe(response);
   }
 }

@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Accounts {
+  id        String @id @map("_id")
+  authToken String
+  password  String
+}
+
+model Bots {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  name  String
+  token String
+}
+
+model Channels {
+  id            String   @id @map("_id")
+  accountEmail  String
+  botToken      String
+  createdAt     DateTime @db.Date
+  lastMessageId String
+  name          String
+  updatedAt     DateTime @db.Date
+}

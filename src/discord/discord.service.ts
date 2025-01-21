@@ -1,15 +1,32 @@
 import { Injectable } from '@nestjs/common';
 import { Client, GatewayIntentBits, TextChannel } from 'discord.js';
+import { PrismaClient } from '@prisma/client';
 import 'dotenv/config';
 
-const botToken = process.env.DISCORD_BOT_TOKEN;
-if (!botToken) throw new Error('Discord bot token is required');
+const prisma = new PrismaClient();
 
 @Injectable()
 export class DiscordService {
-  private channel: TextChannel;
-
   constructor() {
+    prisma.bots.findMany().then((bots) =>
+      bots.forEach(async (bot) => {
+        const client = await this.getClient(bot.token);
+        const channel = await this.getChannel({
+          channelId: '1281679888826372149',
+          client,
+        });
+        this.setChannel({ channelId: '1281679888826372149', channel });
+      }),
+    );
+  }
+
+  private channels: {
+    [key: string]: TextChannel[];
+  } = {};
+
+  private index = 0;
+
+  private async getClient(botToken: string) {
     const client = new Client({
       intents: [
         GatewayIntentBits.Guilds,
@@ -22,31 +39,50 @@ export class DiscordService {
       console.log(`Logged in as ${client.user.tag}`);
     });
 
-    client.login(botToken).then(() => {
-      client.channels
-        .fetch('1281679888826372149')
-        .then((channel) => {
-          if (!channel) throw new Error('Channel not found.');
-          if (channel.isTextBased().valueOf() === false)
-            throw new Error('Channel is not text channel.');
-          this.channel = channel as TextChannel;
-        })
-        .catch((error) => {
-          console.error('Error fetching channel:', error);
-        });
-    });
+    await client.login(botToken);
+
+    return client;
   }
 
-  getMessages() {
-    return this.channel.messages.fetch({ limit: 100 });
+  private async getChannel({
+    channelId,
+    client,
+  }: {
+    channelId: string;
+    client: Client;
+  }) {
+    const channel = await client.channels.fetch(channelId);
+    if (!channel) throw new Error('Channel not found.');
+
+    if (channel.isTextBased().valueOf() === false)
+      throw new Error('Channel is not text channel.');
+
+    return channel as TextChannel;
   }
 
-  getMessage(id: string) {
-    return this.channel.messages.fetch(id);
+  private setChannel({
+    channelId,
+    channel,
+  }: {
+    channelId: string;
+    channel: TextChannel;
+  }) {
+    if (!this.channels[channelId]) this.channels[channelId] = [];
+    this.channels[channelId].push(channel);
   }
 
-  async getAttachment(messageId: string) {
-    const message = await this.channel.messages.fetch(messageId);
+  async getAttachment({
+    messageId,
+    channelId,
+  }: {
+    messageId: string;
+    channelId: string;
+  }) {
+    if (this.index >= this.channels[channelId].length) this.index = 0;
+
+    const channel = this.channels[channelId][this.index++];
+    const message = await channel.messages.fetch(messageId);
+
     return message.attachments.first();
   }
 }
